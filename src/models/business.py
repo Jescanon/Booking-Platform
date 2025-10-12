@@ -5,10 +5,6 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from src.db.database import Base
 
-from src.models.user import User
-from src.models.service import Service
-from src.models.worker import Worker
-
 class Business(Base):
     __tablename__ = 'businesses'
 
@@ -17,6 +13,7 @@ class Business(Base):
     name: Mapped[str] = mapped_column(String(100), unique=True, nullable=False)
     description: Mapped[str | None] = mapped_column(String(255))
     contacts: Mapped[str | None] = mapped_column(String(255))
+    is_active: Mapped[bool] = mapped_column(default=True, nullable=False)
 
     owner: Mapped["User"] = relationship("User", back_populates="business")
     services: Mapped[List["Service"]] = relationship("Service", back_populates="business")

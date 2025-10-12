@@ -5,11 +5,6 @@ from sqlalchemy import ForeignKey
 
 from src.db.database import Base
 
-from src.models.user import User
-from src.models.service import Service
-from src.models.worker import Worker
-
-
 class Booking(Base):
     __tablename__ = 'bookings'
 
