@@ -5,10 +5,6 @@ from sqlalchemy import ForeignKey, String, Table, Column
 
 from src.db.database import Base
 
-from src.models.booking import Booking
-from src.models.business import  Business
-from src.models.worker import Worker
-
 tag = Table(
     'tag',
     Base.metadata,
@@ -24,6 +20,7 @@ class Service(Base):
     name: Mapped[str] = mapped_column(String(100), nullable=False)
     duration: Mapped[int] = mapped_column(nullable=False)
     price: Mapped[float]
+    is_active: Mapped[bool] = mapped_column(default=True, nullable=False)
 
     business: Mapped["Business"] = relationship("Business", back_populates="services")
     workers: Mapped[List["Worker"]] = relationship("Worker", secondary=tag,back_populates="services")

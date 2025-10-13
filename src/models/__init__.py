@@ -1,8 +1,8 @@
-from src.models.user import User
-from src.models.booking import Booking
-from src.models.business import  Business
-from src.models.service import Service
-from src.models.worker import Worker
+from .booking import Booking
+from .business import Business
+from .service import Service
+from .user import User
+from .worker import Worker
 
 
-__all__ = ['User', 'Business', 'Service', 'Worker', 'Booking']
+__all__ = ["Booking", "Business", "Service", "User", "Worker"]
