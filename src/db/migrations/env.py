@@ -8,17 +8,12 @@ from sqlalchemy.ext.asyncio import async_engine_from_config
 from alembic import context
 
 from src.db.database import Base
-from importlib import import_module
+from src import models
+from src.core.config import configs
 
-models = [
-    "src.models.user",
-    "src.models.business",
-    "src.models.service",
-    "src.models.worker",
-    "src.models.booking",
-]
-for m in models:
-    import_module(m)
+
+config = context.config
+config.set_main_option("sqlalchemy.url", configs.get_engine_db())
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.

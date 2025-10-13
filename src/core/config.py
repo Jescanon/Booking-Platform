@@ -1,10 +1,14 @@
 import os
+from pathlib import Path
 from dotenv import load_dotenv
-from alembic import context
 
-config = context.config
 
-load_dotenv()
+BASE_DIR = Path(__file__).resolve().parent
+SRC_DIR = BASE_DIR.parent
+ENV_PATH = SRC_DIR / ".env"
+
+load_dotenv(dotenv_path=str(ENV_PATH))
+
 infos = dict(os.environ)
 
 class Config:
@@ -27,5 +31,4 @@ class Config:
 
 configs = Config(**infos)
 
-config.set_main_option("sqlalchemy.url", configs.get_engine_db())
 
