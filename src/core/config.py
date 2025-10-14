@@ -31,4 +31,6 @@ class Config:
 
 configs = Config(**infos)
 
+SECRET_KEY = infos["SECRET_KEY"]
+ALGORITHM = infos["ALGORITHM"]
 
