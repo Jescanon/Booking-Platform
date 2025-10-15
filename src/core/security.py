@@ -7,7 +7,7 @@ from sqlalchemy import select
 
 from src.core.config import SECRET_KEY, ALGORITHM
 from src.db.sesiondb import get_session
-from src.models.user import User as UserModel
+from src.models.user import User as UserModel, User
 
 from datetime import datetime, timedelta, timezone
 
@@ -61,3 +61,10 @@ async def get_current_user(token: str = Depends(out2_scheme), db: AsyncSession =
         raise code_eror
 
     return users
+
+async def get_current_businessman(current_user: User = Depends(get_current_user)):
+    if current_user.role != "businessman":
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Только бизнесмены могут это редактировать")
+
+    return current_user
+
