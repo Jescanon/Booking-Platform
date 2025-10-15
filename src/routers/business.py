@@ -78,5 +78,5 @@ async def delete_business(business_id: int,
     await db.execute(update(BusinessModel).where(BusinessModel.id == business_id).values(is_active = False))
     await db.commit()
     await db.refresh(inf)
-    return {"success": True}
+    return {"success": "Удалили"}
 
