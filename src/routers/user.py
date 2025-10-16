@@ -23,7 +23,8 @@ router = APIRouter(prefix="/user", tags=["user"])
 async def create_user(user_create: UserCreate, db: AsyncSession = Depends(get_session)):
     db_inf = await db.scalars(select(UserModel).where(UserModel.email == user_create.email))
     if db_inf.first():
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Такой пользователь уже существет")
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
+                            detail="Такой пользователь уже существет")
 
     db_config = UserModel(
         email=user_create.email,
@@ -50,7 +51,10 @@ async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(
     if not users or not verify_password(form_data.password, users.hashed_password):
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
 
-    access_token = create_access_token({"sub": users.email, "role": users.role, "id": users.id, "created_at": str(users.date_joined)})
+    access_token = create_access_token({"sub": users.email,
+                                        "role": users.role,
+                                        "id": users.id,
+                                        "created_at": str(users.date_joined)})
     return {"access_token": access_token, "token_type": "bearer"}
 
 
