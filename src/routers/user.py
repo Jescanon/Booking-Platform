@@ -28,7 +28,6 @@ async def create_user(user_create: UserCreate, db: AsyncSession = Depends(get_se
     db_config = UserModel(
         email=user_create.email,
         hashed_password=hashed_password(user_create.password),
-        role=user_create.role,
         date_joined=datetime.now(timezone.utc),
     )
 
