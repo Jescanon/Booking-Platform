@@ -1,9 +1,8 @@
 from datetime import datetime, timezone
 from typing import List
 
-from fastapi import HTTPException, status
+from fastapi import HTTPException, status, APIRouter, Depends
 
-from fastapi import APIRouter, Depends
 from fastapi.security import OAuth2PasswordRequestForm
 
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -59,3 +58,4 @@ async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(
 @router.get("/info-user", response_model=UserSchema)
 async def read_users_me(user: UserSchema = Depends(get_current_user)):
     return user
+
