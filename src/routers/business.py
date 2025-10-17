@@ -4,7 +4,6 @@ from fastapi import HTTPException, status, APIRouter, Depends
 
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, update
-from sqlalchemy.sql.functions import current_user
 
 from src.db.sesiondb import get_session
 from src.models import User
@@ -14,7 +13,7 @@ from src.models.user import User as UserModel
 
 from src.schemas.business import Business as BusinessSchema, CreateBusiness
 
-from src.core.security import hashed_password, verify_password, create_access_token, get_current_user, get_current_businessman
+from src.core.security import get_current_user, get_current_businessman
 
 
 router = APIRouter(prefix="/business", tags=["business"])
@@ -67,7 +66,8 @@ async def change_business(business_id: int,
 @router.delete("/delete_business/{business_id}")
 async def delete_business(business_id: int,
                           db: AsyncSession = Depends(get_session),
-                          current_bus: User = Depends(get_current_businessman)):
+                          current_bus: User = Depends(get_current_businessman)
+                          ):
 
     inf_in_db = await db.scalars(select(BusinessModel).where(BusinessModel.is_active == True, BusinessModel.id == business_id))
     inf = inf_in_db.first()

@@ -14,7 +14,7 @@ from src.schemas.user import UserCreate, User  as UserSchema
 
 from src.core.security import hashed_password, verify_password, create_access_token, get_current_user
 
-from sqlalchemy import select
+from sqlalchemy import select, update
 
 
 router = APIRouter(prefix="/user", tags=["user"])
@@ -61,4 +61,57 @@ async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(
 @router.get("/info-user", response_model=UserSchema)
 async def read_users_me(user: UserSchema = Depends(get_current_user)):
     return user
+
+
+@router.put("/update/{user_id}", response_model=UserSchema)
+async def update_user(user_id: int,
+                      new_user: UserCreate,
+                      user: UserModel = Depends(get_current_user),
+                      db: AsyncSession = Depends(get_session),
+                      ):
+    inf_in_usr = await db.scalars(select(UserModel).where(UserModel.is_active == True,
+                                                          UserModel.id == user_id))
+    inf = inf_in_usr.first()
+    if not inf:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
+                            detail="Юзер не найден")
+    if inf.id != user.id:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED,
+                            detail="вы не можете менять данного юзера")
+
+    inos = await db.scalars(select(UserModel).where(UserModel.email ==  user.email,
+                                                    UserModel.is_active == True))
+    sec = inos.first()
+
+    if sec and sec.email != new_user.email:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Пользователь с такой почтой уже есть")
+
+
+    await db.execute(update(UserModel).where(UserModel.id == user_id).values(email=new_user.email,
+                                                                             hashed_password=hashed_password(new_user.password)))
+    await db.commit()
+    await db.refresh(inf)
+    return inf
+
+@router.delete("/delete/{user_id}")
+async def delete_user(user_id: int,
+                      db: AsyncSession = Depends(get_session),
+                      user: UserModel = Depends(get_current_user)):
+
+    inf_in_usr = await db.scalars(select(UserModel).where(UserModel.is_active == True,
+                                                          UserModel.id == user_id))
+    inf = inf_in_usr.first()
+    if not inf:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
+                            detail="Юзер не найден")
+    if user.role != "admin":
+        if inf.id != user.id:
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED,
+                                detail="У вас нету прав удалить данного пользователя")
+
+    await db.execute(update(UserModel).where(UserModel.id == user_id).values(is_active=False))
+    await db.commit()
+    return {"success": "Пользователь удален"}
+
+
 

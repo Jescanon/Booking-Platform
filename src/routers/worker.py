@@ -1,3 +1,4 @@
+from typing import List
 from fastapi import HTTPException, status, APIRouter, Depends
 
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -13,7 +14,7 @@ from src.core.security import get_current_user, get_current_businessman
 
 from src.models import User
 
-from sqlalchemy import select
+from sqlalchemy import select, update
 
 
 router = APIRouter(prefix="/worker", tags=["worker"])
@@ -59,3 +60,52 @@ async def register_worker(
     return new_worker
 
 
+@router.get("/workers/{business_id}", response_model=List[WorkerSchema])
+async def get_workers_in_business(
+        business_id: int,
+        db: AsyncSession = Depends(get_session),
+
+):
+    inf_db = await db.scalars(select(WorkerModel).where(WorkerModel.business_id == business_id,
+                                                        WorkerModel.is_active == True))
+    information = inf_db.all()
+    return information
+
+
+@router.put("/workers/{worker_id}", response_model=WorkerSchema)
+async def update_worker(
+        worker_id: int,
+        new_worker: WorkerCreate,
+        db: AsyncSession = Depends(get_session),
+        businessman: BusinessModel = Depends(get_current_businessman),
+):
+    information = await db.scalars(select(WorkerModel).where(WorkerModel.id == worker_id,
+                                                             WorkerModel.is_active == True))
+    inf = information.first()
+
+    if not inf:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Рабочий не найден")
+
+    if inf.business_id != businessman.id:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="У вас нету доступа к этому рабочим")
+
+    inf_in_user = await db.scalars(select(UserModel).where(UserModel.id == new_worker.user_id,
+                                                           UserModel.is_active == True))
+    if not inf_in_user.first():
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Данный пользователь не найден")
+
+    await db.execute(update(WorkerModel).where(WorkerModel.id == worker_id).values(**new_worker.model_dump(),
+                                                                                   business_id=businessman.id))
+
+    await db.commit()
+    await db.refresh(inf)
+    return inf
+
+@router.get("/workers")
+async def get_workers(current_user: User = Depends(get_current_businessman),
+                      db: AsyncSession = Depends(get_session)
+                      ):
+
+    res = await db.scalars(select(WorkerModel).where(WorkerModel.business_id == current_user.id,
+                                                     WorkerModel.is_active == True))
+    return res.all()
