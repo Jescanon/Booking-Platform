@@ -26,10 +26,9 @@ async def create_user(user_create: UserCreate, db: AsyncSession = Depends(get_se
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
                             detail="Такой пользователь уже существет")
 
-    db_config = UserModel(
-        email=user_create.email,
-        hashed_password=hashed_password(user_create.password),
-        date_joined=datetime.now(timezone.utc),
+    db_config = UserModel(email=user_create.email,
+                          hashed_password=hashed_password(user_create.password),
+                          date_joined=datetime.now(timezone.utc),
     )
 
     db.add(db_config)
@@ -55,6 +54,7 @@ async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(
                                         "role": users.role,
                                         "id": users.id,
                                         "created_at": str(users.date_joined)})
+
     return {"access_token": access_token, "token_type": "bearer"}
 
 
@@ -84,7 +84,8 @@ async def update_user(user_id: int,
     sec = inos.first()
 
     if sec and sec.email != new_user.email:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Пользователь с такой почтой уже есть")
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED,
+                            detail="Пользователь с такой почтой уже есть")
 
 
     await db.execute(update(UserModel).where(UserModel.id == user_id).values(email=new_user.email,

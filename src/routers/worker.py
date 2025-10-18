@@ -12,8 +12,6 @@ from src.schemas.worker import Worker as WorkerSchema, WorkerCreate
 
 from src.core.security import get_current_user, get_current_businessman
 
-from src.models import User
-
 from sqlalchemy import select, update
 
 
@@ -22,7 +20,7 @@ router = APIRouter(prefix="/worker", tags=["worker"])
 @router.post("/workers", response_model=WorkerSchema)
 async def register_worker(
     workers: WorkerCreate,
-    businessman_owner: User = Depends(get_current_businessman),
+    businessman_owner: UserModel = Depends(get_current_businessman),
     db: AsyncSession = Depends(get_session)
 ):
 
@@ -42,13 +40,9 @@ async def register_worker(
     if not user:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Пользователь не найден")
 
-    exists_worker = await db.scalar(
-        select(WorkerModel.id).where(
-            WorkerModel.user_id == workers.user_id,
-            WorkerModel.business_id == business.id,
-            WorkerModel.is_active == True
-        )
-    )
+    exists_worker = await db.scalar(select(WorkerModel.id).where(WorkerModel.user_id == workers.user_id
+                                                                 , WorkerModel.business_id == business.id,
+                                                                 WorkerModel.is_active == True))
     if exists_worker:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Этот пользователь уже работает у вас")
 
@@ -77,7 +71,7 @@ async def update_worker(
         worker_id: int,
         new_worker: WorkerCreate,
         db: AsyncSession = Depends(get_session),
-        businessman: BusinessModel = Depends(get_current_businessman),
+        businessman: UserModel = Depends(get_current_businessman),
 ):
     information = await db.scalars(select(WorkerModel).where(WorkerModel.id == worker_id,
                                                              WorkerModel.is_active == True))
@@ -102,7 +96,7 @@ async def update_worker(
     return inf
 
 @router.get("/workers")
-async def get_workers(current_user: User = Depends(get_current_businessman),
+async def get_workers(current_user: UserModel = Depends(get_current_businessman),
                       db: AsyncSession = Depends(get_session)
                       ):
 

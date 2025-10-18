@@ -26,11 +26,14 @@ async def read_business(db: AsyncSession = Depends(get_session)):
 
 
 @router.post("/create_business", response_model=BusinessSchema)
-async def create_business(info_business: CreateBusiness, db: AsyncSession = Depends(get_session), current_user: User = Depends(get_current_user)):
+async def create_business(info_business: CreateBusiness,
+                          db: AsyncSession = Depends(get_session),
+                          current_user: UserModel = Depends(get_current_user)):
 
     info = await db.scalars(select(BusinessModel).where(BusinessModel.name == info_business.name, BusinessModel.is_active == True))
     if info.first():
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Бизнес с таким именем занят")
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
+                            detail="Бизнес с таким именем занят")
 
 
     model_bus = BusinessModel(**info_business.model_dump(), owner_id=current_user.id)
