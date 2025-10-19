@@ -7,4 +7,4 @@ class Worker(BaseModel):
 
 class WorkerCreate(BaseModel):
     name: str = Field(description="Worker Name")
-    user_id: int = Field(description="Worker ID")
+    user_id: int = Field(description="Worker IDs")
