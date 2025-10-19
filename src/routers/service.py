@@ -71,4 +71,3 @@ async def get_services(
                                                            ServiceModel.is_active == True))
 
     return services.all()
-
