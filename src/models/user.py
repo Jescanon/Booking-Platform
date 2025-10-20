@@ -20,3 +20,4 @@ class User(Base):
 
     business: Mapped[List["Business"]] = relationship("Business", back_populates="owner")
     bookings: Mapped[List["Booking"]] = relationship("Booking", back_populates="user")
+    workers: Mapped["Worker"] = relationship("Worker", back_populates="user", uselist=True)

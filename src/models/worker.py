@@ -12,10 +12,12 @@ class Worker(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True)
     name: Mapped[str] = mapped_column(String(100), nullable=False)
-    business_id: Mapped[int] = mapped_column(ForeignKey("businesses.id"), nullable=False)
+    business_id: Mapped[int] = mapped_column(ForeignKey("businesses.id"), nullable=False, unique=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("user.id"), nullable=False, unique=True)
     is_active: Mapped[bool] = mapped_column(default=True, nullable=False)
 
     business: Mapped["Business"] = relationship("Business", back_populates="workers")
     services: Mapped[List["Service"]] = relationship("Service",secondary=tag ,back_populates="workers")
     bookings: Mapped[List["Booking"]] = relationship("Booking", back_populates="workers")
+    user: Mapped["User"] = relationship("User", back_populates="workers")
 
