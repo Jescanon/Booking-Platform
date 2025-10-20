@@ -9,7 +9,7 @@ class Service(BaseModel):
     price: int = Field(description="Цена товара")
     is_active: bool
 
-    config = ConfigDict(from_attributes=True)
+    model_config = ConfigDict(from_attributes=True)
 
 class ServiceCreat(BaseModel):
     name: str = Field(description="Имя заказа")
