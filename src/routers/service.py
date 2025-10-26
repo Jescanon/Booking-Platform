@@ -8,6 +8,7 @@ from src.db.sesiondb import get_session
 from src.models.business import Business as BusinessModel
 from src.models.service import Service as ServiceModel
 from src.models.user import User as UserModel
+from src.models.worker import Worker as WorkerModel
 
 from src.schemas.service import ServiceCreat, Service  as ServiceSchema
 
@@ -36,7 +37,8 @@ async def create_service(
                             detail="Ваш бизнес не найден")
 
     db_inf = await db.scalars(select(ServiceModel).where(ServiceModel.business_id == get_current_bus.id,
-                                                         ServiceModel.is_active == True))
+                                                         ServiceModel.is_active == True,
+                                                         ServiceModel.name == service_creat.name))
 
     if db_inf:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
@@ -44,7 +46,23 @@ async def create_service(
 
     model = ServiceModel(**service_creat.model_dump(), business_id=get_current_bus.id)
     db.add(model)
+    await db.flush()
+
+    if service_creat.worker_id:
+        result = await db.scalars(
+            select(WorkerModel).where(WorkerModel.id == service_creat.worker_id)
+        )
+        worker = result.first()
+        if not worker:
+            raise HTTPException(status_code=404, detail="Работник не найден")
+
+        worker.services.append(model)
+
+
+
     await db.commit()
+    await db.refresh(model)
+
     return model
 
 

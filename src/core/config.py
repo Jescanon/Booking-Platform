@@ -20,7 +20,7 @@ class Config:
                "PASSWORD",
                "BASE_NAME",
                "DOMAIN",
-               ]
+               "BOT_TOKEN",]
 
         for key in args:
             if key in inf:
@@ -29,8 +29,11 @@ class Config:
     def get_engine_db(self):
         return f"{self.info['ENGINE']}://{self.info['USER']}:{self.info['PASSWORD']}@{self.info['DOMAIN']}/{self.info['BASE_NAME']}"
 
+
+
 configs = Config(**infos)
 
 SECRET_KEY = infos["SECRET_KEY"]
 ALGORITHM = infos["ALGORITHM"]
+TOKEN = infos["BOT_TOKEN"]
 

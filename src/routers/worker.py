@@ -2,6 +2,8 @@ from typing import List
 from fastapi import HTTPException, status, APIRouter, Depends
 
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select, update
+
 from src.db.sesiondb import get_session
 
 from src.models.worker import Worker as WorkerModel
@@ -12,7 +14,9 @@ from src.schemas.worker import Worker as WorkerSchema, WorkerCreate
 
 from src.core.security import get_current_user, get_current_businessman
 
-from sqlalchemy import select, update
+from src.utils.generate_linktg import generate_link_token
+
+
 
 
 router = APIRouter(prefix="/worker", tags=["worker"])
@@ -28,6 +32,7 @@ async def register_worker(
         select(BusinessModel)
         .where(BusinessModel.owner_id == businessman_owner.id, BusinessModel.is_active == True)
     )
+
     if not business:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Ваш бизнес не найден")
 
@@ -40,13 +45,16 @@ async def register_worker(
     if not user:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Пользователь не найден")
 
-    exists_worker = await db.scalar(select(WorkerModel.id).where(WorkerModel.user_id == workers.user_id
-                                                                 , WorkerModel.business_id == business.id,
-                                                                 WorkerModel.is_active == True))
+    exists_worker = await db.scalar(select(WorkerModel.id).where(WorkerModel.user_id == workers.user_id,
+                                                                 WorkerModel.business_id == business.id,
+                                                                 WorkerModel.is_active == True,
+                                                                 ))
     if exists_worker:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Этот пользователь уже работает у вас")
 
-    new_worker = WorkerModel(**workers.model_dump(), business_id=business.id)
+    new_worker = WorkerModel(**workers.model_dump(),
+                             business_id=business.id,
+                             )
 
     db.add(new_worker)
     await db.commit()
@@ -95,11 +103,31 @@ async def update_worker(
     await db.refresh(inf)
     return inf
 
-@router.get("/workers")
-async def get_workers(current_user: UserModel = Depends(get_current_businessman),
+@router.get("/workers", response_model=List[WorkerSchema])
+async def get_workers(current_businessman: UserModel = Depends(get_current_businessman),
                       db: AsyncSession = Depends(get_session)
                       ):
 
-    res = await db.scalars(select(WorkerModel).where(WorkerModel.business_id == current_user.id,
+    res = await db.scalars(select(WorkerModel).where(WorkerModel.business_id == current_businessman.id,
                                                      WorkerModel.is_active == True))
-    return res.all()
+    result = res.all()
+    return result
+
+
+@router.put("/register_telegram")
+async def register_telegram(db: AsyncSession = Depends(get_session),
+                            current_user: UserModel = Depends(get_current_user)):
+
+    info = await db.scalars(select(WorkerModel).where(WorkerModel.user_id == current_user.id,
+                                                      WorkerModel.is_active == True))
+
+    res = info.first()
+    if not res:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Такого работника нету, или вы не зарегистрированы как работник")
+
+    if res.telegram_id:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Вы уже привязали свой телеграм")
+
+    link_tg = await generate_link_token(current_user.id, db)
+
+    return {"link": f"https://t.me/bk_push_info_bot?start={link_tg}"}

@@ -113,6 +113,3 @@ async def delete_user(user_id: int,
     await db.execute(update(UserModel).where(UserModel.id == user_id).values(is_active=False))
     await db.commit()
     return {"success": "Пользователь удален"}
-
-
-
