@@ -1,7 +1,7 @@
 from typing import List
 
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-from sqlalchemy import ForeignKey, String
+from sqlalchemy import ForeignKey, String, BIGINT
 
 from src.db.database import Base
 
@@ -12,12 +12,15 @@ class Worker(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True)
     name: Mapped[str] = mapped_column(String(100), nullable=False)
-    business_id: Mapped[int] = mapped_column(ForeignKey("businesses.id"), nullable=False, unique=True)
+    business_id: Mapped[int] = mapped_column(ForeignKey("businesses.id"), nullable=False)
     user_id: Mapped[int] = mapped_column(ForeignKey("user.id"), nullable=False, unique=True)
     is_active: Mapped[bool] = mapped_column(default=True, nullable=False)
+    link_token: Mapped[str] = mapped_column(String(), default=None, nullable=True)
+    telegram_id: Mapped[int] = mapped_column(BIGINT, default=None, nullable=True)
+
 
     business: Mapped["Business"] = relationship("Business", back_populates="workers")
-    services: Mapped[List["Service"]] = relationship("Service",secondary=tag ,back_populates="workers")
+    services: Mapped[List["Service"]] = relationship("Service", secondary=tag ,back_populates="workers")
     bookings: Mapped[List["Booking"]] = relationship("Booking", back_populates="workers")
     user: Mapped["User"] = relationship("User", back_populates="workers")
 

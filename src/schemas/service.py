@@ -15,3 +15,4 @@ class ServiceCreat(BaseModel):
     name: str = Field(description="Имя заказа")
     duration: int = Field(description="Продолжительность")
     price: int = Field(description="Цена товара")
+    worker_id: int | None = Field(default=None)
